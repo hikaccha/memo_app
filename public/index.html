@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メモアプリケーション</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id ="app">
+        <header>
+            <h1>メモアプリケーション</h1>
+            <div id="auth-buttons">
+                <button id="register-button">登録</button>
+                <button id="login-button">ログイン</button>
+                <button id="logout-button" style="display: none;">ログアウト</button>
+            </div>
+        </header>
+
+        <div id="auth-form" style="display: none;">
+            <h2></h2>
+            <form id="auth-form-form">
+                <label for="username">ユーザー名</label><br>
+                <input type="text" id="username" name="username"><br>
+                <label for="password">パスワード</label><br>
+                <input type="password" id="password" name="password"><br><br>
+                <button type="submit"></button>
+            </form>
+        </div>
+
+        <div id="note-form" style="display: none;">
+            <h2>メモ作成/編集</h2>
+            <form id="note-form-form">
+                <label for="title">タイトル</label><br>
+                <input type="text" id="title" name="title"><br>
+                <label for="content">内容</label><br>
+                <textarea id="content" name="content"></textarea><br><br>
+                <button type="submit"></button>
+            </form>
+        </div>
+
+        <div id="note-list" style="display: none;">
+            <h2>メモ一覧</h2>
+            <ul id="notes"></ul>
+        </div>
+
+        <div id="note-detail" style="display: none;">
+            <h2>メモ詳細</h2>
+            <h3 id="note-detail-title"></h3>
+            <p id="note-detail-content"></p>
+            <button id="edit-note-button">編集</button>
+            <button id="delete-note-button">削除</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

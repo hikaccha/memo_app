@@ -1,0 +1,43 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#app {
+    width: 80%;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #ccc;
+}
+
+#auth-buttons button {
+    margin-left: 10px;
+}
+
+#auth-form, #note-form, #note-list, #note-detail {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+#notes li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+    cursor: puinter;
+}
+
+#notes li:last-child {
+    border-bottom: none;
+}
+
+textarea {
+    width: 100px;
+    height: 100px;
+}
