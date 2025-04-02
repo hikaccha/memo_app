@@ -53,6 +53,8 @@ const showNoteForm = (type, note = null) => {
     } else {
         noteForm.querySelector('h2').textContent = 'メモ作成';
         noteFormForm.querySelector('button').textContent = '作成';
+        document.getElementById('title').value = '';　　　//ここらへんで次回以降新規メモ作成する時にフォームが空になるようにしている
+        document.getElementById('content').value = '';
     }
     noteForm.style.display = 'block';
 };
@@ -152,6 +154,7 @@ noteFormForm.addEventListener('submit', async (e) => {
             await apiRequest(`/notes/${currentNoteId}`, 'PUT', { title, content });
         }
         noteForm.style.display = 'none';
+        noteFormForm.reset();
         fetchNotes();
     } catch  (error) {
         displayError(error.message);
@@ -203,13 +206,23 @@ editNoteButton.addEventListener('click', () => {
 const createNoteButton = document.createElement('button');
 createNoteButton.textContent = '新規メモ作成';
 createNoteButton.id = 'create-note-button';
-createNoteButton.addEventListener('click', () => showNoteForm('create'));
+createNoteButton.addEventListener('click', () => {
+    resetNoteForm();     // いちいち消さなくていいようにメモフォームのリセットを追加した
+    showNoteForm('create');
+});
 noteList.prepend(createNoteButton);
 
 // 登録・ログイン時のフォームリセット
 const resetAuthForm = () => {
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
+};
+
+// メモフォームのリセットする関数追加→キャンセルボタンいもぶち込んだ
+const resetNoteForm = () => {
+    document.getElementById('title').value = '';
+    document.getElementById('content').value = '';
+    noteFormForm.reset();
 };
 
 // authFormのキャンセルボタン追加
@@ -228,7 +241,7 @@ cancelNoteButton.textContent = 'キャンセル';
 cancelNoteButton.type = 'button';
 cancelNoteButton.addEventListener('click', () => {
     noteForm.style.display = 'none';
-    noteFormForm.reset();
+    resetNoteForm();
 });
 noteFormForm.appendChild(cancelNoteButton);
 
