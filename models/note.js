@@ -11,7 +11,7 @@ const Note = {
 
     getAll: async (user_id) => {
         const result = await pool.query(
-            'SELECT * FROM notes WHERE user_id = $1',
+            'SELECT * FROM notes WHERE user_id = $1 ORDER BY created_at DESC',  //ここで絞り込んでる
             [user_id]
         );
         return result.rows;

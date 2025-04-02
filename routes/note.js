@@ -14,7 +14,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {　　//ここでフィルタリングし、req.user.idを渡している
     try {
         const notes = await Note.getAll(req.user.id);
         res.json(notes);
