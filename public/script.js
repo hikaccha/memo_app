@@ -99,6 +99,12 @@ const apiRequest = async (url, method, body = null) => {
 
     try {
         const response = await fetch(baseUrl + url, options);
+        
+        // 204 No Content の場合は空オブジェクトを返す（JSONパースをスキップ）
+        if (response.status === 204) {
+            return {};
+        }
+        
         const data = await response.json();
         
         if (!response.ok) {
