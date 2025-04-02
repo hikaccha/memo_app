@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require('../db/connection');
 
 const Note = {
     create: async (user_id, title, content) => {

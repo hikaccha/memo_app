@@ -4,9 +4,12 @@ const app = express();
 const userRoutes = require('./routes/user');
 const noteRoutes = require('./routes/note');
 const path = require('path');
+const cors = require('cors');
 const port = 3000;
 
 require('./db/connection');
+
+app.use(cors());
 
 app.use(express.json()); //JSONリクエストボディの解析ってなんだ？（あとで詳しく調べる）
 
