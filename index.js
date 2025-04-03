@@ -21,13 +21,13 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.use((errorToJSON, req, res, next) => {
+app.use('/users', userRoutes);
+app.use('/notes', noteRoutes);
+
+app.use((error, req, res, next) => {
     console.error(error.stack);
     res.status(500).json({ message: 'Something broke!'});
 });
-
-app.use('/users', userRoutes);
-app.use('/notes', noteRoutes);
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);

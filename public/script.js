@@ -136,14 +136,32 @@ const apiRequest = async (url, method, body = null) => {
     try {
         const response = await fetch(baseUrl + url, options);
         
+        // 認証エラーの場合はトークンをクリア
+        if (response.status === 401 || response.status === 403) {
+            console.log('認証エラー: トークンをクリアします');
+            localStorage.removeItem('token');
+            token = null;
+            updateAuthStatus();
+        }
+        
         // 204 No Content の場合は空オブジェクトを返す（JSONパースをスキップ）
         if (response.status === 204) {
             return {};
         }
         
+        // レスポンスがJSONでない場合のエラーハンドリング
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error(`サーバーからの応答が不正です: ${await response.text()}`);
+        }
+        
         const data = await response.json();
         
         if (!response.ok) {
+            // 認証エラーの場合の特別なハンドリング
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('認証に失敗しました。再ログインしてください。');
+            }
             throw new Error(data.message || 'APIエラー');   
         }
         
@@ -325,4 +343,21 @@ const updateDayMaxValue = () => {
 
 //初期化する
 updateAuthStatus();
+
+// ページ読み込み時にトークンの検証を行う
+const validateToken = async () => {
+    if (!token) return;
+    
+    try {
+        // トークン検証のためにシンプルなAPIリクエストを送信
+        await apiRequest('/notes', 'GET');
+        console.log('トークン検証成功');
+    } catch (error) {
+        console.error('トークン検証失敗:', error);
+        // エラーハンドリングはapiRequest内で行われるため、ここでは何もしない
+    }
+};
+
+// ページ読み込み時に実行
+validateToken();
 
