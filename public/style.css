@@ -5,16 +5,16 @@ body {
 }
 
 #app {
-    width: 80%;
+    max-width: 800px;
     margin: 0 auto;
+    padding: 20px;
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
 }
 
 #auth-buttons button {
@@ -40,4 +40,60 @@ header {
 textarea {
     width: 100px;
     height: 100px;
+}
+
+button {
+    cursor: pointer;
+    padding: 5px 10px;
+    margin-right: 5px;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 150px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    cursor: pointer;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+li:hover {
+    background-color: #f9f9f9;
+}
+
+.date-container {
+    display: flex;
+    gap: 15px;
+}
+
+.date-container div {
+    flex: 1;
+}
+
+.date-container input {
+    width: 100%;
+}
+
+.note-date {
+    font-style: italic;
+    color: #666;
+    margin-top: -10px;
+    margin-bottom: 10px;
 }

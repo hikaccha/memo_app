@@ -31,10 +31,23 @@
         <div id="note-form" style="display: none;">
             <h2>メモ作成/編集</h2>
             <form id="note-form-form">
+                <div class="date-input">
+                    <label>メモの日付</label><br>
+                    <div class="date-container">
+                        <div>
+                            <label for="month">月</label><br>
+                            <input type="number" id="month" name="month" min="1" max="12" required><br>
+                        </div>
+                        <div>
+                            <label for="day">日</label><br>
+                            <input type="number" id="day" name="day" min="1" max="31" required><br>
+                        </div>
+                    </div>
+                </div>
                 <label for="title">タイトル</label><br>
-                <input type="text" id="title" name="title"><br>
+                <input type="text" id="title" name="title" required><br>
                 <label for="content">内容</label><br>
-                <textarea id="content" name="content"></textarea><br><br>
+                <textarea id="content" name="content" required></textarea><br><br>
                 <button type="submit"></button>
             </form>
         </div>
@@ -47,6 +60,7 @@
         <div id="note-detail" style="display: none;">
             <h2>メモ詳細</h2>
             <h3 id="note-detail-title"></h3>
+            <p id="note-detail-date" class="note-date"></p>
             <p id="note-detail-content"></p>
             <button id="edit-note-button">編集</button>
             <button id="delete-note-button">削除</button>
