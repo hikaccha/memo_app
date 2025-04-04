@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メモアプリケーション</title>
+    <title>Ownlender</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id ="app">
         <header>
-            <h1>メモアプリケーション</h1>
+            <h1>Ownlender</h1>
             <div id="auth-buttons">
                 <button id="register-button">登録</button>
                 <button id="login-button">ログイン</button>
@@ -29,10 +29,10 @@
         </div>
 
         <div id="note-form" style="display: none;">
-            <h2>メモ作成/編集</h2>
+            <h2>日記作成/編集</h2>
             <form id="note-form-form">
                 <div class="date-input">
-                    <label>メモの日付</label><br>
+                    <label>日記の日付</label><br>
                     <div class="date-container">
                         <div>
                             <label for="month">月</label><br>
@@ -53,14 +53,14 @@
         </div>
 
         <div id="note-list" style="display: none;">
-            <h2>メモ一覧</h2>
+            <h2>日記一覧</h2>
             <ul id="notes"></ul>
         </div>
 
         <div id="note-detail" style="display: none;">
-            <h2>メモ詳細</h2>
-            <h3 id="note-detail-title"></h3>
+            <h2>日記詳細</h2>
             <p id="note-detail-date" class="note-date"></p>
+            <h3 id="note-detail-title"></h3>
             <p id="note-detail-content"></p>
             <button id="edit-note-button">編集</button>
             <button id="delete-note-button">削除</button>
