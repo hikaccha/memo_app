@@ -60,7 +60,7 @@ const setDateInputs = (dateString) => {
 const showNoteForm = (type, note = null) => {
     noteFormForm.dataset.type = type;
     if (type === 'edit' && note) {
-        noteForm.querySelector('h2').textContent = 'メモ編集';
+        noteForm.querySelector('h2').textContent = '日記編集';
         noteFormForm.querySelector('button').textContent = '更新';
         document.getElementById('title').value = note.title;
         document.getElementById('content').value = note.content;
@@ -74,7 +74,7 @@ const showNoteForm = (type, note = null) => {
         
         currentNote = note;
     } else {
-        noteForm.querySelector('h2').textContent = 'メモ作成';
+        noteForm.querySelector('h2').textContent = '日記作成';
         noteFormForm.querySelector('button').textContent = '作成';
         document.getElementById('title').value = '';
         document.getElementById('content').value = '';
@@ -265,7 +265,7 @@ editNoteButton.addEventListener('click', () => {
 
 // 新規メモ作成ボタンの追加
 const createNoteButton = document.createElement('button');
-createNoteButton.textContent = '新規メモ作成';
+createNoteButton.textContent = '新規日記作成';
 createNoteButton.id = 'create-note-button';
 createNoteButton.addEventListener('click', () => {
     resetNoteForm();
