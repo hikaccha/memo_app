@@ -1,4 +1,36 @@
+// Splash Screen Handler
+const splashScreen = document.getElementById('splash-screen');
 const app = document.getElementById('app');
+
+// Initially hide the app content
+app.style.opacity = '0';
+app.style.transition = 'opacity 0.5s ease';
+
+// Handle splash screen display and hide app initially
+document.addEventListener('DOMContentLoaded', () => {
+    // Hide auth buttons initially until splash screen fades
+    const authButtons = document.getElementById('auth-buttons');
+    if (authButtons) {
+        authButtons.style.visibility = 'hidden';
+    }
+    
+    setTimeout(() => {
+        // After splash animation is complete, show the app
+        app.style.opacity = '1';
+        
+        // Make sure splash is hidden (in case animation failed)
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+            
+            // Show auth buttons after splash is gone
+            if (authButtons) {
+                authButtons.style.visibility = 'visible';
+                authButtons.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+            }
+        }, 2000);
+    }, 3000); // Total time including delay: 1.5s + 2s = 3.5s
+});
+
 const authButtons = document.getElementById('auth-buttons');
 const registerButton = document.getElementById('register-button');
 const loginButton = document.getElementById('login-button');
