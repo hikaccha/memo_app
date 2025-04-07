@@ -82,6 +82,9 @@ const showNoteForm = (type, note = null) => {
         currentNote = null;
     }
     noteForm.style.display = 'block';
+    
+    // フォームへスムーズにスクロールする
+    noteForm.scrollIntoView({ behavior: 'smooth' });
 };
 
 const showNoteDetail = (note) => {
