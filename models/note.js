@@ -57,61 +57,111 @@ const Note = {
             if (err.code === '23505') {
                 return null;
             }
+            // テーブルが存在しない場合も無視する
+            if (err.code === '42P01') {
+                console.error('note_categories テーブルが存在しません');
+                return null;
+            }
             throw err;
         }
     },
 
     // メモからカテゴリを削除
     removeCategory: async (note_id, category_id) => {
-        await pool.query(
-            'DELETE FROM note_categories WHERE note_id = $1 AND category_id = $2',
-            [note_id, category_id]
-        );
+        try {
+            await pool.query(
+                'DELETE FROM note_categories WHERE note_id = $1 AND category_id = $2',
+                [note_id, category_id]
+            );
+        } catch (err) {
+            // テーブルが存在しない場合は無視する
+            if (err.code === '42P01') {
+                console.error('note_categories テーブルが存在しません');
+                return;
+            }
+            throw err;
+        }
     },
 
     // メモの全カテゴリを削除
     clearCategories: async (note_id) => {
-        await pool.query('DELETE FROM note_categories WHERE note_id = $1', [note_id]);
+        try {
+            await pool.query('DELETE FROM note_categories WHERE note_id = $1', [note_id]);
+        } catch (err) {
+            // テーブルが存在しない場合は無視する
+            if (err.code === '42P01') {
+                console.error('note_categories テーブルが存在しません');
+                return;
+            }
+            throw err;
+        }
     },
 
     // メモのカテゴリを取得
     getCategories: async (note_id) => {
-        const result = await pool.query(
-            'SELECT c.* FROM categories c ' +
-            'JOIN note_categories nc ON c.id = nc.category_id ' +
-            'WHERE nc.note_id = $1 ' +
-            'ORDER BY c.name',
-            [note_id]
-        );
-        return result.rows;
+        try {
+            const result = await pool.query(
+                'SELECT c.* FROM categories c ' +
+                'JOIN note_categories nc ON c.id = nc.category_id ' +
+                'WHERE nc.note_id = $1 ' +
+                'ORDER BY c.name',
+                [note_id]
+            );
+            return result.rows;
+        } catch (err) {
+            // テーブルが存在しない場合は空配列を返す
+            if (err.code === '42P01') {
+                console.error('categories または note_categories テーブルが存在しません');
+                return [];
+            }
+            throw err;
+        }
     },
 
     // カテゴリによるメモのフィルタリング
     getByCategoryId: async (user_id, category_id) => {
-        const result = await pool.query(
-            'SELECT n.* FROM notes n ' +
-            'JOIN note_categories nc ON n.id = nc.note_id ' +
-            'WHERE n.user_id = $1 AND nc.category_id = $2 ' +
-            'ORDER BY n.note_date DESC, n.created_at DESC',
-            [user_id, category_id]
-        );
-        return result.rows;
+        try {
+            const result = await pool.query(
+                'SELECT n.* FROM notes n ' +
+                'JOIN note_categories nc ON n.id = nc.note_id ' +
+                'WHERE n.user_id = $1 AND nc.category_id = $2 ' +
+                'ORDER BY n.note_date DESC, n.created_at DESC',
+                [user_id, category_id]
+            );
+            return result.rows;
+        } catch (err) {
+            // テーブルが存在しない場合は空配列を返す
+            if (err.code === '42P01') {
+                console.error('note_categories テーブルが存在しません');
+                return [];
+            }
+            throw err;
+        }
     },
 
     // カテゴリ付きのメモ一覧を取得
     getAllWithCategories: async (user_id) => {
-        // メモとカテゴリを結合して取得
-        const result = await pool.query(
-            'SELECT n.*, COALESCE(json_agg(c) FILTER (WHERE c.id IS NOT NULL), \'[]\') as categories ' +
-            'FROM notes n ' +
-            'LEFT JOIN note_categories nc ON n.id = nc.note_id ' +
-            'LEFT JOIN categories c ON nc.category_id = c.id ' +
-            'WHERE n.user_id = $1 ' +
-            'GROUP BY n.id ' +
-            'ORDER BY n.note_date DESC, n.created_at DESC',
-            [user_id]
-        );
-        return result.rows;
+        try {
+            // メモとカテゴリを結合して取得
+            const result = await pool.query(
+                'SELECT n.*, COALESCE(json_agg(c) FILTER (WHERE c.id IS NOT NULL), \'[]\') as categories ' +
+                'FROM notes n ' +
+                'LEFT JOIN note_categories nc ON n.id = nc.note_id ' +
+                'LEFT JOIN categories c ON nc.category_id = c.id ' +
+                'WHERE n.user_id = $1 ' +
+                'GROUP BY n.id ' +
+                'ORDER BY n.note_date DESC, n.created_at DESC',
+                [user_id]
+            );
+            return result.rows;
+        } catch (err) {
+            // テーブルが存在しない場合は基本的なノート情報のみを返す
+            if (err.code === '42P01') {
+                console.error('categories または note_categories テーブルが存在しません。基本的なノート情報のみを返します。');
+                return await Note.getAll(user_id);
+            }
+            throw err;
+        }
     }
 };
 

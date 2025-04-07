@@ -137,12 +137,14 @@ const showNoteDetail = (note) => {
     
     // カテゴリの表示
     noteDetailCategories.innerHTML = '';
-    if (note.categories && Array.isArray(note.categories) && note.categories.length > 0) {
+    if (note.categories && Array.isArray(note.categories) && note.categories.length > 0 && note.categories[0] !== null) {
         note.categories.forEach(category => {
-            const categoryTag = document.createElement('span');
-            categoryTag.className = 'category-tag';
-            categoryTag.textContent = category.name;
-            noteDetailCategories.appendChild(categoryTag);
+            if (category && category.name) {
+                const categoryTag = document.createElement('span');
+                categoryTag.className = 'category-tag';
+                categoryTag.textContent = category.name;
+                noteDetailCategories.appendChild(categoryTag);
+            }
         });
     } else {
         noteDetailCategories.innerHTML = '<em>カテゴリなし</em>';
@@ -153,16 +155,23 @@ const showNoteDetail = (note) => {
 
 const displayNotes = (notes) => {
     notesList.innerHTML = '';
+    
+    if (!notes || !Array.isArray(notes)) {
+        return;
+    }
+    
     notes.forEach(note => {
         const li = document.createElement('li');
         const dateString = note.note_date ? formatDate(note.note_date) : '';
         
         // カテゴリタグを追加
         let categoryHTML = '';
-        if (note.categories && Array.isArray(note.categories) && note.categories.length > 0) {
+        if (note.categories && Array.isArray(note.categories) && note.categories.length > 0 && note.categories[0] !== null) {
             categoryHTML = '<div class="note-categories">';
             note.categories.forEach(category => {
-                categoryHTML += `<span class="category-tag">${category.name}</span>`;
+                if (category && category.name) {
+                    categoryHTML += `<span class="category-tag">${category.name}</span>`;
+                }
             });
             categoryHTML += '</div>';
         }
@@ -191,12 +200,14 @@ const updateCategorySelect = (categories) => {
     categorySelect.innerHTML = '<option value="">すべて表示</option>';
     
     // カテゴリを追加
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.id;
-        option.textContent = category.name;
-        categorySelect.appendChild(option);
-    });
+    if (categories && Array.isArray(categories)) {
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            categorySelect.appendChild(option);
+        });
+    }
     
     // 可能であれば元の選択値を復元
     if (currentValue) {
@@ -207,6 +218,10 @@ const updateCategorySelect = (categories) => {
 // カテゴリ一覧を表示
 const displayCategories = (categories) => {
     categoryList.innerHTML = '';
+    
+    if (!categories || !Array.isArray(categories)) {
+        return;
+    }
     
     categories.forEach(category => {
         const li = document.createElement('li');
@@ -384,7 +399,11 @@ const fetchCategories = async () => {
         updateCategorySelect(categories);
         displayCategories(categories);
     } catch (error) {
-        displayError(error.message);
+        console.error('カテゴリの取得に失敗しました:', error.message);
+        // エラーが発生しても、アプリ全体の動作に影響しないように空の配列を設定
+        allCategories = [];
+        updateCategorySelect([]);
+        displayCategories([]);
     }
 };
 

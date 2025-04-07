@@ -42,22 +42,34 @@ router.post('/', authenticateToken, async (req, res) => {
         
         // カテゴリの処理
         if (categories && Array.isArray(categories) && categories.length > 0) {
-            for (const categoryName of categories) {
-                // カテゴリが存在するか確認し、なければ作成
-                let category = await Category.getByName(req.user.id, categoryName);
-                if (!category) {
-                    category = await Category.create(req.user.id, categoryName);
+            try {
+                for (const categoryName of categories) {
+                    // カテゴリが存在するか確認し、なければ作成
+                    let category = await Category.getByName(req.user.id, categoryName);
+                    if (!category) {
+                        category = await Category.create(req.user.id, categoryName);
+                    }
+                    
+                    // メモにカテゴリを関連付け
+                    await Note.addCategory(note.id, category.id);
                 }
-                
-                // メモにカテゴリを関連付け
-                await Note.addCategory(note.id, category.id);
+            } catch (err) {
+                // カテゴリ関連のエラーは無視して、ノートの作成自体は成功させる
+                console.error('カテゴリの処理中にエラーが発生しました:', err.message);
             }
         }
         
         // カテゴリ情報を含めたメモを取得
+        let noteCategories = [];
+        try {
+            noteCategories = await Note.getCategories(note.id);
+        } catch (err) {
+            console.error('カテゴリの取得中にエラーが発生しました:', err.message);
+        }
+        
         const noteWithCategories = {
             ...note,
-            categories: await Note.getCategories(note.id)
+            categories: noteCategories
         };
         
         res.status(201).json(noteWithCategories);
@@ -94,7 +106,12 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
         
         // カテゴリ情報を取得して追加
-        const categories = await Note.getCategories(note.id);
+        let categories = [];
+        try {
+            categories = await Note.getCategories(note.id);
+        } catch (err) {
+            console.error('カテゴリの取得中にエラーが発生しました:', err.message);
+        }
         
         res.json({
             ...note,
@@ -151,28 +168,40 @@ router.put('/:id', authenticateToken, async (req, res) => {
         
         // カテゴリの更新処理
         if (categories !== undefined) {
-            // 既存のカテゴリをすべて削除
-            await Note.clearCategories(note.id);
-            
-            // 新しいカテゴリを追加
-            if (Array.isArray(categories) && categories.length > 0) {
-                for (const categoryName of categories) {
-                    // カテゴリが存在するか確認し、なければ作成
-                    let category = await Category.getByName(req.user.id, categoryName);
-                    if (!category) {
-                        category = await Category.create(req.user.id, categoryName);
+            try {
+                // 既存のカテゴリをすべて削除
+                await Note.clearCategories(note.id);
+                
+                // 新しいカテゴリを追加
+                if (Array.isArray(categories) && categories.length > 0) {
+                    for (const categoryName of categories) {
+                        // カテゴリが存在するか確認し、なければ作成
+                        let category = await Category.getByName(req.user.id, categoryName);
+                        if (!category) {
+                            category = await Category.create(req.user.id, categoryName);
+                        }
+                        
+                        // メモにカテゴリを関連付け
+                        await Note.addCategory(note.id, category.id);
                     }
-                    
-                    // メモにカテゴリを関連付け
-                    await Note.addCategory(note.id, category.id);
                 }
+            } catch (err) {
+                // カテゴリ関連のエラーは無視して、ノートの更新自体は成功させる
+                console.error('カテゴリの更新中にエラーが発生しました:', err.message);
             }
         }
         
         // カテゴリ情報を含めたメモを取得
+        let updatedCategories = [];
+        try {
+            updatedCategories = await Note.getCategories(updatedNote.id);
+        } catch (err) {
+            console.error('カテゴリの取得中にエラーが発生しました:', err.message);
+        }
+        
         const noteWithCategories = {
             ...updatedNote,
-            categories: await Note.getCategories(updatedNote.id)
+            categories: updatedCategories
         };
         
         res.json(noteWithCategories);
