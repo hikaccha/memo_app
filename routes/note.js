@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Note = require('../models/note');
+const Category = require('../models/category');
 const authenticateToken = require('../middleware/auth');
 
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const { title, content, month, day } = req.body;
+        const { title, content, month, day, categories } = req.body;
         
         // 日付の検証
         if (!month || !day || isNaN(month) || isNaN(day)) {
@@ -36,17 +37,48 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.status(400).json({ message: 'この日付のメモはすでに存在します' });
         }
         
+        // メモの作成
         const note = await Note.create(req.user.id, title, content, note_date);
-        res.status(201).json(note);
+        
+        // カテゴリの処理
+        if (categories && Array.isArray(categories) && categories.length > 0) {
+            for (const categoryName of categories) {
+                // カテゴリが存在するか確認し、なければ作成
+                let category = await Category.getByName(req.user.id, categoryName);
+                if (!category) {
+                    category = await Category.create(req.user.id, categoryName);
+                }
+                
+                // メモにカテゴリを関連付け
+                await Note.addCategory(note.id, category.id);
+            }
+        }
+        
+        // カテゴリ情報を含めたメモを取得
+        const noteWithCategories = {
+            ...note,
+            categories: await Note.getCategories(note.id)
+        };
+        
+        res.status(201).json(noteWithCategories);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
 
-router.get('/', authenticateToken, async (req, res) => {　　//ここでフィルタリングし、req.user.idを渡している
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        const notes = await Note.getAll(req.user.id);
+        // カテゴリでフィルタリングする場合
+        const { category_id } = req.query;
+        
+        let notes;
+        if (category_id) {
+            notes = await Note.getByCategoryId(req.user.id, category_id);
+        } else {
+            notes = await Note.getAllWithCategories(req.user.id);
+        }
+        
         res.json(notes);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -60,7 +92,14 @@ router.get('/:id', authenticateToken, async (req, res) => {
         if (!note || note.user_id !==req.user.id) {
             return res.status(404).json({ message: 'メモが見つかりません' });
         }
-        res.json(note);
+        
+        // カテゴリ情報を取得して追加
+        const categories = await Note.getCategories(note.id);
+        
+        res.json({
+            ...note,
+            categories
+        });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -69,7 +108,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 router.put('/:id', authenticateToken, async (req, res) => {
     try {
-        const { title, content, month, day } = req.body;
+        const { title, content, month, day, categories } = req.body;
         const note = await Note.getById(req.params.id);
         
         if (!note || note.user_id !== req.user.id) {
@@ -107,8 +146,36 @@ router.put('/:id', authenticateToken, async (req, res) => {
             return res.status(400).json({ message: 'この日付のメモはすでに存在します' });
         }
         
-        const updateNote = await Note.update(req.params.id, title, content, note_date);
-        res.json(updateNote);
+        // メモの更新
+        const updatedNote = await Note.update(req.params.id, title, content, note_date);
+        
+        // カテゴリの更新処理
+        if (categories !== undefined) {
+            // 既存のカテゴリをすべて削除
+            await Note.clearCategories(note.id);
+            
+            // 新しいカテゴリを追加
+            if (Array.isArray(categories) && categories.length > 0) {
+                for (const categoryName of categories) {
+                    // カテゴリが存在するか確認し、なければ作成
+                    let category = await Category.getByName(req.user.id, categoryName);
+                    if (!category) {
+                        category = await Category.create(req.user.id, categoryName);
+                    }
+                    
+                    // メモにカテゴリを関連付け
+                    await Note.addCategory(note.id, category.id);
+                }
+            }
+        }
+        
+        // カテゴリ情報を含めたメモを取得
+        const noteWithCategories = {
+            ...updatedNote,
+            categories: await Note.getCategories(updatedNote.id)
+        };
+        
+        res.json(noteWithCategories);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

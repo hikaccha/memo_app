@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const userRoutes = require('./routes/user');
 const noteRoutes = require('./routes/note');
+const categoryRoutes = require('./routes/category');
 const path = require('path');
 const cors = require('cors');
 const port = 3000;
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
 
 app.use('/users', userRoutes);
 app.use('/notes', noteRoutes);
+app.use('/categories', categoryRoutes);
 
 app.use((error, req, res, next) => {
     console.error(error.stack);

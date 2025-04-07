@@ -14,12 +14,20 @@ const noteDetail = document.getElementById('note-detail');
 const noteDetailTitle = document.getElementById('note-detail-title');
 const noteDetailContent = document.getElementById('note-detail-content');
 const noteDetailDate = document.getElementById('note-detail-date');
+const noteDetailCategories = document.getElementById('note-detail-categories');
 const editNoteButton = document.getElementById('edit-note-button');
 const deleteNoteButton = document.getElementById('delete-note-button');
+const categorySelect = document.getElementById('category-select');
+const categoriesInput = document.getElementById('categories');
+const categorySuggestions = document.getElementById('category-suggestions');
+const categoryManagement = document.getElementById('category-management');
+const addCategoryForm = document.getElementById('add-category-form');
+const categoryList = document.getElementById('category-list');
 
 let token = localStorage.getItem('token');
 let currentNoteId = null;
 let currentNote = null;
+let allCategories = [];
 
 const updateAuthStatus = () => {
     if (token) {
@@ -28,6 +36,24 @@ const updateAuthStatus = () => {
         logoutButton.style.display =  'block';
         noteList.style.display = 'block';
         fetchNotes();
+        fetchCategories();
+        
+        // カテゴリ管理セクションの表示を追加
+        const manageCategoriesButton = document.createElement('button');
+        manageCategoriesButton.textContent = 'カテゴリ管理';
+        manageCategoriesButton.id = 'manage-categories-button';
+        manageCategoriesButton.addEventListener('click', () => {
+            if (categoryManagement.style.display === 'none') {
+                categoryManagement.style.display = 'block';
+            } else {
+                categoryManagement.style.display = 'none';
+            }
+        });
+        
+        // すでにボタンが存在している場合は追加しない
+        if (!document.getElementById('manage-categories-button')) {
+            noteList.insertBefore(manageCategoriesButton, noteList.firstChild);
+        }
     } else {
         registerButton.style.display = 'block';
         loginButton.style.display = 'block';
@@ -35,6 +61,13 @@ const updateAuthStatus = () => {
         noteList.style.display = 'none';
         noteForm.style.display = 'none';
         noteDetail.style.display = 'none';
+        categoryManagement.style.display = 'none';
+        
+        // カテゴリ管理ボタンを削除
+        const manageCategoriesButton = document.getElementById('manage-categories-button');
+        if (manageCategoriesButton) {
+            manageCategoriesButton.remove();
+        }
     }
 };
 
@@ -72,18 +105,26 @@ const showNoteForm = (type, note = null) => {
             setDateInputs();
         }
         
+        // カテゴリの設定
+        if (note.categories && Array.isArray(note.categories)) {
+            document.getElementById('categories').value = note.categories.map(cat => cat.name).join(', ');
+        } else {
+            document.getElementById('categories').value = '';
+        }
+        
         currentNote = note;
     } else {
         noteForm.querySelector('h2').textContent = '日記作成';
         noteFormForm.querySelector('button').textContent = '作成';
         document.getElementById('title').value = '';
         document.getElementById('content').value = '';
+        document.getElementById('categories').value = '';
         setDateInputs();
         currentNote = null;
     }
     noteForm.style.display = 'block';
     
-    // フォームへスムーズにスクロールする
+    // スムーズスクロールを追加
     noteForm.scrollIntoView({ behavior: 'smooth' });
 };
 
@@ -94,6 +135,19 @@ const showNoteDetail = (note) => {
     // 日付の表示
     noteDetailDate.textContent = note.note_date ? formatDate(note.note_date) : '';
     
+    // カテゴリの表示
+    noteDetailCategories.innerHTML = '';
+    if (note.categories && Array.isArray(note.categories) && note.categories.length > 0) {
+        note.categories.forEach(category => {
+            const categoryTag = document.createElement('span');
+            categoryTag.className = 'category-tag';
+            categoryTag.textContent = category.name;
+            noteDetailCategories.appendChild(categoryTag);
+        });
+    } else {
+        noteDetailCategories.innerHTML = '<em>カテゴリなし</em>';
+    }
+    
     noteDetail.style.display = 'block';
 };
 
@@ -103,9 +157,20 @@ const displayNotes = (notes) => {
         const li = document.createElement('li');
         const dateString = note.note_date ? formatDate(note.note_date) : '';
         
+        // カテゴリタグを追加
+        let categoryHTML = '';
+        if (note.categories && Array.isArray(note.categories) && note.categories.length > 0) {
+            categoryHTML = '<div class="note-categories">';
+            note.categories.forEach(category => {
+                categoryHTML += `<span class="category-tag">${category.name}</span>`;
+            });
+            categoryHTML += '</div>';
+        }
+        
         li.innerHTML = `
             <strong>${note.title}</strong>
             ${dateString ? `<span class="note-date"> (${dateString})</span>` : ''}
+            ${categoryHTML}
         `;
         
         li.addEventListener('click', () => {
@@ -114,6 +179,57 @@ const displayNotes = (notes) => {
             currentNote = note;
         });
         notesList.appendChild(li);
+    });
+};
+
+// カテゴリのセレクトボックスを更新
+const updateCategorySelect = (categories) => {
+    // 現在の選択値を保存
+    const currentValue = categorySelect.value;
+    
+    // セレクトボックスをクリア
+    categorySelect.innerHTML = '<option value="">すべて表示</option>';
+    
+    // カテゴリを追加
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+    });
+    
+    // 可能であれば元の選択値を復元
+    if (currentValue) {
+        categorySelect.value = currentValue;
+    }
+};
+
+// カテゴリ一覧を表示
+const displayCategories = (categories) => {
+    categoryList.innerHTML = '';
+    
+    categories.forEach(category => {
+        const li = document.createElement('li');
+        
+        li.innerHTML = `
+            <span>${category.name}</span>
+            <span class="category-delete-btn" data-id="${category.id}">×</span>
+        `;
+        
+        // 削除ボタンのイベントリスナー
+        li.querySelector('.category-delete-btn').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (confirm(`カテゴリ「${category.name}」を削除しますか？`)) {
+                try {
+                    await apiRequest(`/categories/${category.id}`, 'DELETE');
+                    fetchCategories();
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+        });
+        
+        categoryList.appendChild(li);
     });
 };
 
@@ -212,16 +328,23 @@ noteFormForm.addEventListener('submit', async (e) => {
     const content = document.getElementById('content').value;
     const month = document.getElementById('month').value;
     const day = document.getElementById('day').value;
+    const categoriesValue = document.getElementById('categories').value;
+    
+    // カテゴリをカンマで分割して前後の空白を削除
+    const categories = categoriesValue.split(',')
+        .map(cat => cat.trim())
+        .filter(cat => cat !== '');
     
     try {
         if (type === 'create') {
-            await apiRequest('/notes', 'POST', { title, content, month, day });
+            await apiRequest('/notes', 'POST', { title, content, month, day, categories });
         } else {
-            await apiRequest(`/notes/${currentNoteId}`, 'PUT', { title, content, month, day });
+            await apiRequest(`/notes/${currentNoteId}`, 'PUT', { title, content, month, day, categories });
         }
         noteForm.style.display = 'none';
         noteFormForm.reset();
         fetchNotes();
+        fetchCategories(); // カテゴリが新しく追加された可能性があるため再取得
     } catch (error) {
         displayError(error.message);
     }
@@ -240,8 +363,26 @@ deleteNoteButton.addEventListener('click', async () => {
 
 const fetchNotes = async () => {
     try {
-        const notes = await apiRequest('/notes', 'GET');
+        // カテゴリフィルターの値を取得
+        const categoryId = categorySelect.value;
+        
+        // カテゴリIDがある場合はフィルターして取得
+        const url = categoryId ? `/notes?category_id=${categoryId}` : '/notes';
+        
+        const notes = await apiRequest(url, 'GET');
         displayNotes(notes);
+    } catch (error) {
+        displayError(error.message);
+    }
+};
+
+// カテゴリを取得する関数
+const fetchCategories = async () => {
+    try {
+        const categories = await apiRequest('/categories', 'GET');
+        allCategories = categories;
+        updateCategorySelect(categories);
+        displayCategories(categories);
     } catch (error) {
         displayError(error.message);
     }
@@ -266,6 +407,67 @@ editNoteButton.addEventListener('click', () => {
     showNoteForm('edit', currentNote);
 });
 
+// カテゴリの選択が変更されたら日記一覧を再取得
+categorySelect.addEventListener('change', () => {
+    fetchNotes();
+});
+
+// カテゴリ入力フィールドの入力候補表示
+categoriesInput.addEventListener('input', () => {
+    const inputValue = categoriesInput.value;
+    const lastCategory = inputValue.split(',').pop().trim();
+    
+    if (lastCategory.length > 0) {
+        // 入力候補をフィルタリング
+        const filteredCategories = allCategories.filter(cat => 
+            cat.name.toLowerCase().includes(lastCategory.toLowerCase())
+        );
+        
+        if (filteredCategories.length > 0) {
+            categorySuggestions.innerHTML = '';
+            filteredCategories.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = cat.name;
+                div.addEventListener('click', () => {
+                    // カンマ区切りの最後の要素を選択したカテゴリに置き換える
+                    const categories = categoriesInput.value.split(',');
+                    categories.pop();
+                    categories.push(cat.name);
+                    categoriesInput.value = categories.join(', ') + (categories.length > 0 ? ' ' : '');
+                    categorySuggestions.style.display = 'none';
+                    categoriesInput.focus();
+                });
+                categorySuggestions.appendChild(div);
+            });
+            categorySuggestions.style.display = 'block';
+        } else {
+            categorySuggestions.style.display = 'none';
+        }
+    } else {
+        categorySuggestions.style.display = 'none';
+    }
+});
+
+// カテゴリ追加フォームの送信処理
+addCategoryForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const categoryName = document.getElementById('new-category-name').value;
+    
+    if (categoryName.trim() === '') {
+        displayError('カテゴリ名を入力してください');
+        return;
+    }
+    
+    try {
+        await apiRequest('/categories', 'POST', { name: categoryName });
+        document.getElementById('new-category-name').value = '';
+        fetchCategories();
+    } catch (error) {
+        displayError(error.message);
+    }
+});
+
 // 新規メモ作成ボタンの追加
 const createNoteButton = document.createElement('button');
 createNoteButton.textContent = '新規日記作成';
@@ -288,6 +490,7 @@ const resetNoteForm = () => {
     document.getElementById('content').value = '';
     document.getElementById('month').value = '';
     document.getElementById('day').value = '';
+    document.getElementById('categories').value = '';
     noteFormForm.reset();
     setDateInputs();
 };
@@ -343,6 +546,13 @@ const updateDayMaxValue = () => {
         dayInput.value = daysInMonth;
     }
 };
+
+// クリック以外でカテゴリ候補を閉じる
+document.addEventListener('click', (e) => {
+    if (!categorySuggestions.contains(e.target) && e.target !== categoriesInput) {
+        categorySuggestions.style.display = 'none';
+    }
+});
 
 //初期化する
 updateAuthStatus();

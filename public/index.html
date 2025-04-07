@@ -47,13 +47,26 @@
                 <label for="title">タイトル</label><br>
                 <input type="text" id="title" name="title" required><br>
                 <label for="content">内容</label><br>
-                <textarea id="content" name="content" required></textarea><br><br>
+                <textarea id="content" name="content" required></textarea><br>
+                
+                <label for="categories">カテゴリ (カンマ区切りで複数入力可能)</label><br>
+                <div class="category-input-container">
+                    <input type="text" id="categories" name="categories"><br>
+                    <div id="category-suggestions" class="category-suggestions"></div>
+                </div>
+                
                 <button type="submit"></button>
             </form>
         </div>
 
         <div id="note-list" style="display: none;">
             <h2>日記一覧</h2>
+            <div id="category-filter">
+                <label for="category-select">カテゴリで絞り込み:</label>
+                <select id="category-select">
+                    <option value="">すべて表示</option>
+                </select>
+            </div>
             <ul id="notes"></ul>
         </div>
 
@@ -62,8 +75,18 @@
             <p id="note-detail-date" class="note-date"></p>
             <h3 id="note-detail-title"></h3>
             <p id="note-detail-content"></p>
+            <div id="note-detail-categories" class="categories-container"></div>
             <button id="edit-note-button">編集</button>
             <button id="delete-note-button">削除</button>
+        </div>
+        
+        <div id="category-management" style="display: none;">
+            <h2>カテゴリ管理</h2>
+            <form id="add-category-form">
+                <input type="text" id="new-category-name" placeholder="新しいカテゴリ名" required>
+                <button type="submit">追加</button>
+            </form>
+            <ul id="category-list"></ul>
         </div>
     </div>
 
