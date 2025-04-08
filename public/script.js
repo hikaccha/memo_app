@@ -281,7 +281,93 @@ const displayCategories = (categories) => {
 };
 
 const displayError = (message) => {
-    alert(message);
+    showCustomAlert(message);
+};
+
+const showCustomAlert = (message) => {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay';
+    
+    // Create alert container
+    const alert = document.createElement('div');
+    alert.className = 'custom-alert';
+    
+    // Add message
+    const messageElem = document.createElement('div');
+    messageElem.className = 'custom-alert-message';
+    messageElem.textContent = message;
+    alert.appendChild(messageElem);
+    
+    // Add OK button
+    const button = document.createElement('button');
+    button.className = 'custom-alert-button';
+    button.textContent = 'OK';
+    button.onclick = () => {
+        document.body.removeChild(overlay);
+    };
+    alert.appendChild(button);
+    
+    // Add alert to overlay and overlay to body
+    overlay.appendChild(alert);
+    document.body.appendChild(overlay);
+    
+    // Focus the button
+    button.focus();
+};
+
+const showCustomConfirm = (message) => {
+    return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-alert-overlay';
+        
+        // Create alert container
+        const alert = document.createElement('div');
+        alert.className = 'custom-alert';
+        
+        // Add message
+        const messageElem = document.createElement('div');
+        messageElem.className = 'custom-alert-message';
+        messageElem.textContent = message;
+        alert.appendChild(messageElem);
+        
+        // Add buttons container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'center';
+        buttonContainer.style.gap = '10px';
+        
+        // Add OK button
+        const okButton = document.createElement('button');
+        okButton.className = 'custom-alert-button';
+        okButton.textContent = 'OK';
+        okButton.onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(true);
+        };
+        buttonContainer.appendChild(okButton);
+        
+        // Add Cancel button
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'custom-alert-button';
+        cancelButton.style.backgroundColor = '#f44336';
+        cancelButton.textContent = 'キャンセル';
+        cancelButton.onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(false);
+        };
+        buttonContainer.appendChild(cancelButton);
+        
+        alert.appendChild(buttonContainer);
+        
+        // Add alert to overlay and overlay to body
+        overlay.appendChild(alert);
+        document.body.appendChild(overlay);
+        
+        // Focus the OK button
+        okButton.focus();
+    });
 };
 
 const apiRequest = async (url, method, body = null) => {
@@ -358,7 +444,7 @@ authFormForm.addEventListener('submit', async (e) => {
             authForm.style.display = 'none';
             updateAuthStatus();
         } else {
-            alert('登録しました。ログインしてください。');
+            showCustomAlert('登録しました。ログインしてください。');
             authForm.style.display = 'none';
             showAuthForm('login');
         }
@@ -398,7 +484,8 @@ noteFormForm.addEventListener('submit', async (e) => {
 });
 
 deleteNoteButton.addEventListener('click', async () => {
-    if (!confirm('削除しますか？')) return;
+    const confirmed = await showCustomConfirm('削除しますか？');
+    if (!confirmed) return;
     try {
         await apiRequest(`/notes/${currentNoteId}`, 'DELETE');
         noteDetail.style.display = 'none';
@@ -565,6 +652,31 @@ cancelNoteButton.addEventListener('click', () => {
     resetNoteForm();
 });
 noteFormForm.appendChild(cancelNoteButton);
+
+// Initialize function to reset category form
+const resetCategoryForm = (inputId) => {
+    const input = document.getElementById(inputId);
+    if (input) {
+        input.value = '';
+    }
+};
+
+// Recreate the cancel category button properly
+// First, remove the existing code for the cancel button if it exists
+const existingCancelCategoryButton = document.querySelector('#add-category-form button[type="button"]');
+if (existingCancelCategoryButton) {
+    existingCancelCategoryButton.remove();
+}
+
+// Create a new cancel button
+const cancelCategoryButton = document.createElement('button');
+cancelCategoryButton.textContent = 'キャンセル';
+cancelCategoryButton.type = 'button';
+cancelCategoryButton.addEventListener('click', () => {
+    categoryManagement.style.display = 'none';
+    resetCategoryForm('new-category-name');
+});
+addCategoryForm.appendChild(cancelCategoryButton);
 
 // 日付入力の検証
 const monthInput = document.getElementById('month');

@@ -10,9 +10,13 @@ const port = 3000;
 
 require('./db/connection');
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(express.json()); //JSONリクエストボディの解析ってなんだ？（あとで詳しく調べる）
+app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -27,10 +31,21 @@ app.use('/notes', noteRoutes);
 app.use('/categories', categoryRoutes);
 
 app.use((error, req, res, next) => {
-    console.error(error.stack);
-    res.status(500).json({ message: 'Something broke!'});
+    console.error('Server error:', error.stack);
+    res.status(500).json({ 
+        message: 'Something broke!',
+        error: process.env.NODE_ENV === 'production' ? null : error.message
+    });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
+});
+
+process.on('SIGINT', () => {
+    console.log('Shutting down server gracefully...');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
 });
