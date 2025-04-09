@@ -77,8 +77,6 @@ const updateAuthStatus = () => {
         manageCategoriesButton.addEventListener('click', () => {
             if (categoryManagement.style.display === 'none') {
                 categoryManagement.style.display = 'block';
-            } else {
-                categoryManagement.style.display = 'none';
             }
         });
         
