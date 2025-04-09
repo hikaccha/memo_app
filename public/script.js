@@ -35,6 +35,11 @@ const authButtons = document.getElementById('auth-buttons');
 const registerButton = document.getElementById('register-button');
 const loginButton = document.getElementById('login-button');
 const logoutButton = document.getElementById('logout-button');
+const userProfile = document.getElementById('user-profile');
+const userIcon = document.getElementById('user-icon');
+const profileDropdown = document.getElementById('profile-dropdown');
+const profileButton = document.getElementById('profile-button');
+const logoutDropdownButton = document.getElementById('logout-dropdown-button');
 const authForm = document.getElementById('auth-form');
 const authFormTitle = document.querySelector('#auth-form h2');
 const authFormForm = document.getElementById('auth-form-form');
@@ -65,10 +70,14 @@ const updateAuthStatus = () => {
     if (token) {
         registerButton.style.display = 'none';
         loginButton.style.display = 'none';
-        logoutButton.style.display =  'block';
+        logoutButton.style.display = 'none';
+        userProfile.style.display = 'block';
         noteList.style.display = 'block';
         fetchNotes();
         fetchCategories();
+        
+        // First character of username as user icon (if available)
+        showUsernameInIcon();
         
         // カテゴリ管理セクションの表示を追加
         const manageCategoriesButton = document.createElement('button');
@@ -88,6 +97,7 @@ const updateAuthStatus = () => {
         registerButton.style.display = 'block';
         loginButton.style.display = 'block';
         logoutButton.style.display = 'none';
+        userProfile.style.display = 'none';
         noteList.style.display = 'none';
         noteForm.style.display = 'none';
         noteDetail.style.display = 'none';
@@ -100,6 +110,47 @@ const updateAuthStatus = () => {
         }
     }
 };
+
+// Show first character of username in the user icon
+const showUsernameInIcon = async () => {
+    try {
+        // Get user info from the server if needed
+        // For now we'll just use a default "U"
+        const userInitial = "U";
+        userIcon.querySelector('span').textContent = userInitial;
+    } catch (error) {
+        console.error("Failed to get username:", error);
+        userIcon.querySelector('span').textContent = "U";
+    }
+};
+
+// Toggle dropdown menu when user icon is clicked
+userIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userIcon.classList.toggle('active');
+});
+
+// Handle clicks outside the dropdown to close it
+document.addEventListener('click', (e) => {
+    if (!userProfile.contains(e.target)) {
+        userIcon.classList.remove('active');
+    }
+});
+
+// Handle profile button click
+profileButton.addEventListener('click', () => {
+    // Will implement profile editing screen later
+    alert('プロフィール編集画面は現在開発中です');
+    userIcon.classList.remove('active');
+});
+
+// Handle logout button in dropdown
+logoutDropdownButton.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    token = null;
+    updateAuthStatus();
+    userIcon.classList.remove('active');
+});
 
 const showAuthForm = (type) => {
     authFormTitle.textContent = type === 'register' ? 'ユーザー登録' : 'ログイン';
