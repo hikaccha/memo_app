@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - Ownlender</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1><a href="index.html">Ownlender</a></h1>
+            <nav class="main-nav">
+                <div class="nav-links">
+                    <a href="index.html" class="button">ホーム</a>
+                </div>
+            </nav>
+        </header>
+
+        <main class="auth-container">
+            <div class="auth-form-container">
+                <h2>ログイン</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">ユーザー名</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">パスワード</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="button primary-button">ログイン</button>
+                        <a href="index.html" class="button secondary-button">キャンセル</a>
+                    </div>
+                </form>
+                <div class="auth-links">
+                    <p>アカウントをお持ちでない場合は <a href="register.html">登録</a> してください。</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Ownlender - あなただけの日記帳</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Redirect if already logged in
+            if (requireNoAuth() === false) return;
+            
+            const loginForm = document.getElementById('login-form');
+            
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                try {
+                    console.log(`Attempting login with username: ${username}`);
+                    const data = await apiRequest(`/users/login`, 'POST', { username, password });
+                    
+                    if (data.token) {
+                        setToken(data.token);
+                        console.log('Login successful, redirecting...');
+                        window.location.href = 'notes.html';
+                    } else {
+                        displayError('ログインに失敗しました。トークンが見つかりません。');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    displayError(error.message || 'ログインに失敗しました。');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

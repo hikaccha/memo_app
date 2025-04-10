@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイノート - Ownlender</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1><a href="index.html">Ownlender</a></h1>
+            <nav class="main-nav">
+                <div class="nav-links">
+                    <a href="notes.html" class="active button">マイノート</a>
+                    <a href="categories.html" class="button">カテゴリー</a>
+                </div>
+                <div class="user-icon-container">
+                    <div class="user-icon">
+                        <span id="user-initial">?</span>
+                    </div>
+                    <div class="user-dropdown">
+                        <a href="#" id="logout-button" class="button">ログアウト</a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <div class="page-container">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <h2>マイノート</h2>
+                        <button id="new-note-button" class="button primary-button">新規ノート</button>
+                    </div>
+                    
+                    <div class="category-filter">
+                        <label for="category-select">カテゴリー:</label>
+                        <select id="category-select">
+                            <option value="all">すべて</option>
+                        </select>
+                    </div>
+                    
+                    <div id="note-list" class="note-list">
+                        <!-- Notes will be populated here -->
+                        <div class="empty-state">
+                            <p>ノートがありません</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content">
+                    <div id="note-detail" class="note-detail">
+                        <div class="empty-state">
+                            <p>ノートを選択してください</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- New Note Form Modal -->
+            <div id="new-note-form" class="modal">
+                <div class="modal-content">
+                    <h3>新規ノート作成</h3>
+                    <form id="create-note-form">
+                        <div class="form-group">
+                            <label for="note-title">タイトル</label>
+                            <input type="text" id="note-title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="note-content">内容</label>
+                            <textarea id="note-content" name="content" rows="5" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="note-category">カテゴリー</label>
+                            <select id="note-category" name="category_id">
+                                <option value="">カテゴリーなし</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="button primary-button">作成</button>
+                            <button type="button" id="cancel-note-button" class="button secondary-button">キャンセル</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Ownlender - あなただけの日記帳</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            if (requireAuth() === false) return;
+            
+            // Set up authenticated header UI
+            setupAuthenticatedHeader();
+            
+            // Elements
+            const newNoteButton = document.getElementById('new-note-button');
+            const newNoteForm = document.getElementById('new-note-form');
+            const createNoteForm = document.getElementById('create-note-form');
+            const cancelNoteButton = document.getElementById('cancel-note-button');
+            const noteList = document.getElementById('note-list');
+            const noteDetail = document.getElementById('note-detail');
+            const categorySelect = document.getElementById('category-select');
+            const noteCategorySelect = document.getElementById('note-category');
+            
+            let currentNotes = [];
+            let categories = [];
+            
+            // Load categories and populate selects
+            const loadCategories = async () => {
+                try {
+                    categories = await apiRequest('/categories', 'GET');
+                    
+                    // Add options to filter select
+                    categorySelect.innerHTML = '<option value="all">すべて</option>';
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                    
+                    // Add options to form select
+                    noteCategorySelect.innerHTML = '<option value="">カテゴリーなし</option>';
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        noteCategorySelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                    displayError('カテゴリーの読み込みに失敗しました。');
+                }
+            };
+            
+            // Load and display notes
+            const loadNotes = async (categoryId = 'all') => {
+                try {
+                    let url = '/notes';
+                    if (categoryId !== 'all') {
+                        url = `/notes?category_id=${categoryId}`;
+                    }
+                    
+                    currentNotes = await apiRequest(url, 'GET');
+                    
+                    if (currentNotes.length === 0) {
+                        noteList.innerHTML = `
+                            <div class="empty-state">
+                                <p>ノートがありません</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Display notes in the list
+                    noteList.innerHTML = '';
+                    currentNotes.forEach(note => {
+                        const noteElement = document.createElement('div');
+                        noteElement.className = 'note-item';
+                        noteElement.dataset.id = note.id;
+                        
+                        // Find category name if exists
+                        let categoryName = '';
+                        if (note.category_id) {
+                            const category = categories.find(c => c.id === note.category_id);
+                            if (category) categoryName = category.name;
+                        }
+                        
+                        noteElement.innerHTML = `
+                            <h3>${note.title}</h3>
+                            <div class="note-meta">
+                                <span class="date">${formatDate(note.created_at)}</span>
+                                ${categoryName ? `<span class="category">${categoryName}</span>` : ''}
+                            </div>
+                        `;
+                        
+                        noteElement.addEventListener('click', () => {
+                            showNoteDetail(note);
+                            
+                            // Add selected class
+                            document.querySelectorAll('.note-item').forEach(item => {
+                                item.classList.remove('selected');
+                            });
+                            noteElement.classList.add('selected');
+                        });
+                        
+                        noteList.appendChild(noteElement);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading notes:', error);
+                    displayError('ノートの読み込みに失敗しました。');
+                }
+            };
+            
+            // Show note detail
+            const showNoteDetail = (note) => {
+                // Find category name if exists
+                let categoryName = 'カテゴリーなし';
+                if (note.category_id) {
+                    const category = categories.find(c => c.id === note.category_id);
+                    if (category) categoryName = category.name;
+                }
+                
+                noteDetail.innerHTML = `
+                    <div class="note-header">
+                        <h2>${note.title}</h2>
+                        <div class="note-actions">
+                            <a href="edit-note.html?id=${note.id}" class="button secondary-button">編集</a>
+                            <button class="button danger-button delete-note" data-id="${note.id}">削除</button>
+                        </div>
+                    </div>
+                    <div class="note-meta">
+                        <span class="date">${formatDate(note.created_at)}</span>
+                        <span class="category">${categoryName}</span>
+                    </div>
+                    <div class="note-content-display">
+                        <p>${note.content}</p>
+                    </div>
+                `;
+                
+                // Add delete event listener
+                const deleteButton = noteDetail.querySelector('.delete-note');
+                deleteButton.addEventListener('click', () => deleteNote(note.id));
+            };
+            
+            // Delete note
+            const deleteNote = async (noteId) => {
+                if (!confirm('本当にこのノートを削除しますか？')) return;
+                
+                try {
+                    await apiRequest(`/notes/${noteId}`, 'DELETE');
+                    
+                    // Reload notes
+                    loadNotes(categorySelect.value);
+                    
+                    // Clear detail view
+                    noteDetail.innerHTML = `
+                        <div class="empty-state">
+                            <p>ノートを選択してください</p>
+                        </div>
+                    `;
+                    
+                    showCustomAlert('ノートを削除しました。');
+                } catch (error) {
+                    console.error('Error deleting note:', error);
+                    displayError('ノートの削除に失敗しました。');
+                }
+            };
+            
+            // Event Listeners
+            newNoteButton.addEventListener('click', () => {
+                newNoteForm.style.display = 'flex';
+            });
+            
+            cancelNoteButton.addEventListener('click', () => {
+                newNoteForm.style.display = 'none';
+                createNoteForm.reset();
+            });
+            
+            categorySelect.addEventListener('change', () => {
+                loadNotes(categorySelect.value);
+            });
+            
+            createNoteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const title = document.getElementById('note-title').value;
+                const content = document.getElementById('note-content').value;
+                const categoryId = document.getElementById('note-category').value || null;
+                
+                try {
+                    await apiRequest('/notes', 'POST', { title, content, category_id: categoryId });
+                    
+                    // Reset form and hide modal
+                    createNoteForm.reset();
+                    newNoteForm.style.display = 'none';
+                    
+                    // Reload notes
+                    loadNotes(categorySelect.value);
+                    
+                    showCustomAlert('ノートを作成しました。');
+                } catch (error) {
+                    console.error('Error creating note:', error);
+                    displayError('ノートの作成に失敗しました。');
+                }
+            });
+            
+            // Click outside modal to close
+            window.addEventListener('click', (e) => {
+                if (e.target === newNoteForm) {
+                    newNoteForm.style.display = 'none';
+                    createNoteForm.reset();
+                }
+            });
+            
+            // Initial load
+            await Promise.all([
+                loadCategories(),
+                loadNotes()
+            ]);
+        });
+    </script>
+</body>
+</html> 

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ownlender</title>
+    <title>Ownlender - あなただけの日記帳</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/common.js"></script>
 </head>
 <body>
     <div id="splash-screen">
@@ -13,98 +14,110 @@
         </div>
     </div>
     
-    <div id ="app">
+    <div id="app">
         <header>
             <h1>Ownlender</h1>
+            <nav class="main-nav">
+                <div class="nav-links">
+                    <!-- Will be populated based on auth state -->
+                </div>
+            </nav>
             <div id="auth-buttons">
-                <button id="register-button">登録</button>
-                <button id="login-button">ログイン</button>
+                <a href="register.html" class="button" id="register-button">登録</a>
+                <a href="login.html" class="button" id="login-button">ログイン</a>
                 <div id="user-profile" style="display: none;">
                     <div id="user-icon">
                         <span>U</span>
                     </div>
                     <div id="profile-dropdown">
-                        <div class="dropdown-item" id="profile-button">プロフィール</div>
+                        <a href="profile.html" class="dropdown-item" id="profile-button">プロフィール</a>
                         <div class="dropdown-item" id="logout-dropdown-button">ログアウト</div>
                     </div>
                 </div>
-                <button id="logout-button" style="display: none;">ログアウト</button>
             </div>
         </header>
 
-        <div id="auth-form" style="display: none;">
-            <h2></h2>
-            <form id="auth-form-form">
-                <label for="username">ユーザー名</label><br>
-                <input type="text" id="username" name="username"><br>
-                <label for="password">パスワード</label><br>
-                <input type="password" id="password" name="password"><br><br>
-                <button type="submit"></button>
-            </form>
-        </div>
-
-        <div id="note-form" style="display: none;">
-            <h2>日記作成/編集</h2>
-            <form id="note-form-form">
-                <div class="date-input">
-                    <label>日記の日付</label><br>
-                    <div class="date-container">
-                        <div>
-                            <label for="month">月</label><br>
-                            <input type="number" id="month" name="month" min="1" max="12" required><br>
-                        </div>
-                        <div>
-                            <label for="day">日</label><br>
-                            <input type="number" id="day" name="day" min="1" max="31" required><br>
-                        </div>
+        <main class="landing-page">
+            <section class="hero">
+                <h2>あなただけの日記帳</h2>
+                <p>Ownlenderは、あなたの思い出や日々の出来事を簡単に記録できるオンライン日記アプリです。</p>
+                <div class="cta-buttons">
+                    <a href="register.html" class="button primary-button">今すぐ始める</a>
+                    <a href="login.html" class="button secondary-button">ログイン</a>
+                </div>
+            </section>
+            
+            <section class="features">
+                <h2>主な機能</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>シンプルで使いやすい</h3>
+                        <p>直感的なインターフェースで、誰でも簡単に日記を記録できます。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>カテゴリー機能</h3>
+                        <p>日記にカテゴリを追加して、簡単に整理・検索できます。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>プライバシー保護</h3>
+                        <p>あなたの日記は安全に保管され、あなただけがアクセスできます。</p>
                     </div>
                 </div>
-                <label for="title">タイトル</label><br>
-                <input type="text" id="title" name="title" required><br>
-                <label for="content">内容</label><br>
-                <textarea id="content" name="content" required></textarea><br>
-                
-                <label for="categories">カテゴリ (カンマ区切りで複数入力可能)</label><br>
-                <div class="category-input-container">
-                    <input type="text" id="categories" name="categories"><br>
-                    <div id="category-suggestions" class="category-suggestions"></div>
-                </div>
-                
-                <button type="submit"></button>
-            </form>
-        </div>
-
-        <div id="note-list" style="display: none;">
-            <h2>日記一覧</h2>
-            <div id="category-filter">
-                <label for="category-select">カテゴリで絞り込み:</label>
-                <select id="category-select">
-                    <option value="">すべて表示</option>
-                </select>
-            </div>
-            <ul id="notes"></ul>
-        </div>
-
-        <div id="note-detail" style="display: none;">
-            <h2>日記詳細</h2>
-            <p id="note-detail-date" class="note-date"></p>
-            <h3 id="note-detail-title"></h3>
-            <p id="note-detail-content"></p>
-            <div id="note-detail-categories" class="categories-container"></div>
-            <button id="edit-note-button">編集</button>
-            <button id="delete-note-button">削除</button>
-        </div>
+            </section>
+        </main>
         
-        <div id="category-management" style="display: none;">
-            <h2>カテゴリ管理</h2>
-            <form id="add-category-form">
-                <input type="text" id="new-category-name" placeholder="新しいカテゴリ名" required>
-                <button type="submit">追加</button>
-            </form>
-            <ul id="category-list"></ul>
-        </div>
+        <footer>
+            <p>&copy; 2025 Ownlender - あなただけの日記帳</p>
+        </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Handle splash screen
+        const splashScreen = document.getElementById('splash-screen');
+        const app = document.getElementById('app');
+        
+        // Initially hide the app content
+        app.style.opacity = '0';
+        app.style.transition = 'opacity 0.5s ease';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hide auth buttons initially until splash screen fades
+            const authButtons = document.getElementById('auth-buttons');
+            if (authButtons) {
+                authButtons.style.visibility = 'hidden';
+            }
+            
+            setTimeout(() => {
+                // After splash animation is complete, show the app
+                app.style.opacity = '1';
+                
+                // Make sure splash is hidden (in case animation failed)
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                    
+                    // Show auth buttons after splash is gone
+                    if (authButtons) {
+                        authButtons.style.visibility = 'visible';
+                        authButtons.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+                    }
+                }, 2000);
+            }, 3000);
+            
+            // Check if user is logged in and update UI accordingly
+            if (isAuthenticated()) {
+                document.getElementById('register-button').style.display = 'none';
+                document.getElementById('login-button').style.display = 'none';
+                setupUserIcon();
+                
+                // Update nav links for logged-in users
+                const navLinks = document.querySelector('.nav-links');
+                navLinks.innerHTML = `
+                    <a href="notes.html" class="button">日記一覧</a>
+                    <a href="note-create.html" class="button">新規作成</a>
+                    <a href="categories.html" class="button">カテゴリ管理</a>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>

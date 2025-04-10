@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー登録 - Ownlender</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1><a href="index.html">Ownlender</a></h1>
+            <nav class="main-nav">
+                <div class="nav-links">
+                    <a href="index.html" class="button">ホーム</a>
+                </div>
+            </nav>
+        </header>
+
+        <main class="auth-container">
+            <div class="auth-form-container">
+                <h2>ユーザー登録</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="username">ユーザー名</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">パスワード</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password-confirm">パスワード（確認）</label>
+                        <input type="password" id="password-confirm" name="password-confirm" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="button primary-button">登録</button>
+                        <a href="index.html" class="button secondary-button">キャンセル</a>
+                    </div>
+                </form>
+                <div class="auth-links">
+                    <p>すでにアカウントをお持ちの場合は <a href="login.html">ログイン</a> してください。</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Ownlender - あなただけの日記帳</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Redirect if already logged in
+            if (requireNoAuth() === false) return;
+            
+            const registerForm = document.getElementById('register-form');
+            
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const passwordConfirm = document.getElementById('password-confirm').value;
+                
+                // Basic validation
+                if (password !== passwordConfirm) {
+                    displayError('パスワードが一致しません。');
+                    return;
+                }
+                
+                try {
+                    console.log(`Attempting registration with username: ${username}`);
+                    const data = await apiRequest(`/users/register`, 'POST', { username, password });
+                    
+                    showCustomAlert('登録が完了しました。ログインしてください。');
+                    
+                    // Redirect to login page after successful registration
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    displayError(error.message || '登録に失敗しました。');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
