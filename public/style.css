@@ -122,6 +122,46 @@ li:hover {
     background-color: #f9f9f9;
 }
 
+/* 日付入力関連のスタイル */
+.date-input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.date-inputs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.month-input-container,
+.day-input-container {
+    flex: 1;
+}
+
+.month-input-container label,
+.day-input-container label {
+    display: block;
+    font-size: 0.85em;
+    margin-bottom: 3px;
+    color: #666;
+}
+
+.month-input,
+.day-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.month-input:focus,
+.day-input:focus {
+    border-color: #4a90e2;
+    outline: none;
+}
+
+/* 古い日付コンテナスタイルを更新 */
 .date-container {
     display: flex;
     gap: 15px;
@@ -272,20 +312,25 @@ li:hover {
 /* User Profile Styles */
 #user-profile {
     position: relative;
-    display: inline-block;
+    display: none;
 }
 
 #user-icon {
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
+    background-color: #4a90e2;
     border-radius: 50%;
-    background-color: #4CAF50;
-    color: white;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
+    color: white;
     font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#user-icon:hover {
+    background-color: #2c75d8;
 }
 
 #profile-dropdown {
@@ -293,28 +338,33 @@ li:hover {
     right: 0;
     top: 45px;
     background-color: white;
-    min-width: 130px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border: 1px solid #ddd;
     border-radius: 4px;
-    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 150px;
     display: none;
+    z-index: 100;
 }
 
-.dropdown-item {
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid hsl(0, 0%, 95%);
+#profile-dropdown a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #333;
 }
 
-.dropdown-item:last-child {
+#profile-dropdown a:last-child {
     border-bottom: none;
 }
 
-.dropdown-item:hover {
-    background-color: #f1f1f1;
+#profile-dropdown a:hover {
+    background-color: #f5f5f5;
 }
 
-/* Show dropdown when user-icon is clicked */
 #user-icon.active + #profile-dropdown {
     display: block;
-} 
+}
+
+.field {              /*要素横並び*/
+    justify-content: space-around;
+}

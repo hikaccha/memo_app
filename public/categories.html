@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カテゴリ管理 - Ownlender</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1><a href="index.html">Ownlender</a></h1>
+            <nav class="main-nav">
+                <div class="nav-links">
+                    <a href="notes.html" class="button">日記一覧</a>
+                    <a href="create-note.html" class="button">新規作成</a>
+                    <a href="categories.html" class="button active">カテゴリ管理</a>
+                </div>
+            </nav>
+            <div id="auth-buttons">
+                <div id="user-profile">
+                    <div id="user-icon">
+                        <span>U</span>
+                    </div>
+                    <div id="profile-dropdown">
+                        <a href="profile.html" class="dropdown-item" id="profile-button">プロフィール</a>
+                        <a id="logout-dropdown-button" href="#" class="dropdown-item">ログアウト</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="page-container">
+                <div class="content-section">
+                    <h2>カテゴリ管理</h2>
+                    <p>カテゴリを追加、編集、削除できます。</p>
+
+                    <div class="category-form">
+                        <form id="add-category-form">
+                            <input type="text" id="category-name" placeholder="新しいカテゴリ名" required>
+                            <button type="submit" class="button primary-button">追加</button>
+                        </form>
+                    </div>
+
+                    <div class="category-list-container">
+                        <h3>カテゴリ一覧</h3>
+                        <ul id="category-list">
+                            <li class="empty-state">カテゴリがありません</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit Category Modal -->
+            <div id="edit-category-modal" class="modal">
+                <div class="modal-content">
+                    <h3>カテゴリ編集</h3>
+                    <form id="edit-category-form">
+                        <input type="hidden" id="edit-category-id">
+                        <div class="form-group">
+                            <label for="edit-category-name">カテゴリ名</label>
+                            <input type="text" id="edit-category-name" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="button primary-button">保存</button>
+                            <button type="button" id="cancel-edit-button" class="button secondary-button">キャンセル</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Ownlender - あなただけの日記帳</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            if (requireAuth() === false) return;
+            
+            // Set up authenticated header UI
+            setupAuthenticatedHeader();
+            
+            // Elements
+            const addCategoryForm = document.getElementById('add-category-form');
+            const categoryNameInput = document.getElementById('category-name');
+            const categoryList = document.getElementById('category-list');
+            const editCategoryModal = document.getElementById('edit-category-modal');
+            const editCategoryForm = document.getElementById('edit-category-form');
+            const editCategoryIdInput = document.getElementById('edit-category-id');
+            const editCategoryNameInput = document.getElementById('edit-category-name');
+            const cancelEditButton = document.getElementById('cancel-edit-button');
+            
+            // Load categories
+            const loadCategories = async () => {
+                try {
+                    const categories = await apiRequest('/categories', 'GET');
+                    
+                    if (categories.length === 0) {
+                        categoryList.innerHTML = '<li class="empty-state">カテゴリがありません</li>';
+                        return;
+                    }
+                    
+                    categoryList.innerHTML = '';
+                    categories.forEach(category => {
+                        const li = document.createElement('li');
+                        li.className = 'category-item';
+                        li.innerHTML = `
+                            <div class="category-name">${category.name}</div>
+                            <div class="category-actions">
+                                <button class="button edit-category" data-id="${category.id}" data-name="${category.name}">編集</button>
+                                <button class="button danger-button delete-category" data-id="${category.id}">削除</button>
+                            </div>
+                        `;
+                        categoryList.appendChild(li);
+                    });
+                    
+                    // Add event listeners for edit and delete buttons
+                    document.querySelectorAll('.edit-category').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const categoryId = button.dataset.id;
+                            const categoryName = button.dataset.name;
+                            
+                            // Fill edit form
+                            editCategoryIdInput.value = categoryId;
+                            editCategoryNameInput.value = categoryName;
+                            
+                            // Show modal
+                            editCategoryModal.style.display = 'flex';
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-category').forEach(button => {
+                        button.addEventListener('click', async () => {
+                            const categoryId = button.dataset.id;
+                            const isConfirmed = await showCustomConfirm('このカテゴリを削除してもよろしいですか？関連するノートからもカテゴリが削除されます。');
+                            
+                            if (isConfirmed) {
+                                await deleteCategory(categoryId);
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                    displayError('カテゴリの読み込みに失敗しました。');
+                }
+            };
+            
+            // Add category
+            const addCategory = async (name) => {
+                try {
+                    await apiRequest('/categories', 'POST', { name });
+                    categoryNameInput.value = '';
+                    showCustomAlert('カテゴリを追加しました。');
+                    await loadCategories();
+                } catch (error) {
+                    console.error('Error adding category:', error);
+                    displayError('カテゴリの追加に失敗しました。');
+                }
+            };
+            
+            // Update category
+            const updateCategory = async (id, name) => {
+                try {
+                    await apiRequest(`/categories/${id}`, 'PUT', { name });
+                    editCategoryModal.style.display = 'none';
+                    showCustomAlert('カテゴリを更新しました。');
+                    await loadCategories();
+                } catch (error) {
+                    console.error('Error updating category:', error);
+                    displayError('カテゴリの更新に失敗しました。');
+                }
+            };
+            
+            // Delete category
+            const deleteCategory = async (id) => {
+                try {
+                    await apiRequest(`/categories/${id}`, 'DELETE');
+                    showCustomAlert('カテゴリを削除しました。');
+                    await loadCategories();
+                } catch (error) {
+                    console.error('Error deleting category:', error);
+                    displayError('カテゴリの削除に失敗しました。');
+                }
+            };
+            
+            // Event listeners
+            addCategoryForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = categoryNameInput.value.trim();
+                if (name) {
+                    await addCategory(name);
+                }
+            });
+            
+            editCategoryForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = editCategoryIdInput.value;
+                const name = editCategoryNameInput.value.trim();
+                if (id && name) {
+                    await updateCategory(id, name);
+                }
+            });
+            
+            cancelEditButton.addEventListener('click', () => {
+                editCategoryModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === editCategoryModal) {
+                    editCategoryModal.style.display = 'none';
+                }
+            });
+            
+            // Initial load
+            await loadCategories();
+        });
+    </script>
+</body>
+</html> 

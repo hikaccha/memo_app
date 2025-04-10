@@ -16,15 +16,18 @@
                     <a href="notes.html" class="active button">マイノート</a>
                     <a href="categories.html" class="button">カテゴリー</a>
                 </div>
-                <div class="user-icon-container">
-                    <div class="user-icon">
-                        <span id="user-initial">?</span>
+            </nav>
+            <div id="auth-buttons">
+                <div id="user-profile">
+                    <div id="user-icon">
+                        <span>U</span>
                     </div>
-                    <div class="user-dropdown">
-                        <a href="#" id="logout-button" class="button">ログアウト</a>
+                    <div id="profile-dropdown">
+                        <a href="profile.html" class="dropdown-item" id="profile-button">プロフィール</a>
+                        <a id="logout-dropdown-button" href="#" class="dropdown-item">ログアウト</a>
                     </div>
                 </div>
-            </nav>
+            </div>
         </header>
 
         <main>
@@ -63,7 +66,21 @@
             <div id="new-note-form" class="modal">
                 <div class="modal-content">
                     <h3>新規ノート作成</h3>
-                    <form id="create-note-form">
+                    <form id="create-note-form" data-has-date="true">
+                        <div class="form-group date-input-group">
+                            <label>日付</label>
+                            <div class="date-inputs">
+                                <div class="month-input-container">
+                                    <label for="note-month">月</label>
+                                    <input type="number" id="note-month" class="month-input" min="1" max="12" placeholder="1-12">
+                                </div>
+                                <div class="day-input-container">
+                                    <label for="note-day">日</label>
+                                    <input type="number" id="note-day" class="day-input" min="1" max="31" placeholder="1-31">
+                                </div>
+                            </div>
+                            <input type="hidden" id="note-date" name="note_date" class="note-date-hidden">
+                        </div>
                         <div class="form-group">
                             <label for="note-title">タイトル</label>
                             <input type="text" id="note-title" name="title" required>
@@ -177,7 +194,7 @@
                         noteElement.innerHTML = `
                             <h3>${note.title}</h3>
                             <div class="note-meta">
-                                <span class="date">${formatDate(note.created_at)}</span>
+                                <span class="date">${note.note_date ? formatDate(note.note_date) : formatDate(note.created_at)}</span>
                                 ${categoryName ? `<span class="category">${categoryName}</span>` : ''}
                             </div>
                         `;
@@ -219,7 +236,7 @@
                         </div>
                     </div>
                     <div class="note-meta">
-                        <span class="date">${formatDate(note.created_at)}</span>
+                        <span class="date">${note.note_date ? formatDate(note.note_date) : formatDate(note.created_at)}</span>
                         <span class="category">${categoryName}</span>
                     </div>
                     <div class="note-content-display">
@@ -278,7 +295,12 @@
                 const categoryId = document.getElementById('note-category').value || null;
                 
                 try {
-                    await apiRequest('/notes', 'POST', { title, content, category_id: categoryId });
+                    await apiRequest('/notes', 'POST', { 
+                        title, 
+                        content, 
+                        category_id: categoryId,
+                        note_date: document.getElementById('note-date').value || null
+                    });
                     
                     // Reset form and hide modal
                     createNoteForm.reset();
@@ -307,6 +329,9 @@
                 loadCategories(),
                 loadNotes()
             ]);
+            
+            // Initialize date inputs
+            setupMonthDayInputs();
         });
     </script>
 </body>

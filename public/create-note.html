@@ -13,18 +13,20 @@
             <h1><a href="index.html">Ownlender</a></h1>
             <nav class="main-nav">
                 <div class="nav-links">
-                    <a id="my-notes-button" href="notes.html" class="button">マイノート</a>
-                    <a id="categories-button" href="categories.html" class="button">カテゴリー</a>
-                </div>
-                <div class="user-icon-container">
-                    <div class="user-icon">
-                        <span id="user-initial">?</span>
-                    </div>
-                    <div class="user-dropdown">
-                        <a id="logout-button" href="#" class="button">ログアウト</a>
-                    </div>
+                    <!-- Will be populated based on auth state -->
                 </div>
             </nav>
+            <div id="auth-buttons">
+                <div id="user-profile">
+                    <div id="user-icon">
+                        <span>U</span>
+                    </div>
+                    <div id="profile-dropdown">
+                        <a href="profile.html" class="dropdown-item" id="profile-button">プロフィール</a>
+                        <a id="logout-dropdown-button" href="#" class="dropdown-item">ログアウト</a>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main>
@@ -37,7 +39,7 @@
                         </div>
                     </div>
                     
-                    <form id="create-note-form">
+                    <form id="create-note-form" data-has-date="true">
                         <div class="form-group">
                             <label for="note-title">タイトル</label>
                             <input type="text" id="note-title" name="title" required>
@@ -51,6 +53,20 @@
                             <select id="note-category" name="category_id">
                                 <option value="">カテゴリーなし</option>
                             </select>
+                        </div>
+                        <div class="form-group date-input-group">
+                            <label>日付</label>
+                            <div class="date-inputs">
+                                <div class="month-input-container">
+                                    <label for="note-month">月</label>
+                                    <input type="number" id="note-month" class="month-input" min="1" max="12" placeholder="1-12">
+                                </div>
+                                <div class="day-input-container">
+                                    <label for="note-day">日</label>
+                                    <input type="number" id="note-day" class="day-input" min="1" max="31" placeholder="1-31">
+                                </div>
+                            </div>
+                            <input type="hidden" id="note-date" name="note_date" class="note-date-hidden">
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="button primary-button">作成</button>
@@ -113,7 +129,8 @@
                     await apiRequest('/notes', 'POST', {
                         title,
                         content,
-                        category_id: categoryId
+                        category_id: categoryId,
+                        note_date: document.getElementById('note-date').value || null
                     });
                     
                     showCustomAlert('ノートを作成しました。');
@@ -130,6 +147,9 @@
             
             // Initial load
             await loadCategories();
+            
+            // Initialize datepicker
+            setupMonthDayInputs();
         });
     </script>
 </body>

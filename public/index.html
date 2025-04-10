@@ -23,15 +23,13 @@
                 </div>
             </nav>
             <div id="auth-buttons">
-                <a href="register.html" class="button" id="register-button">登録</a>
-                <a href="login.html" class="button" id="login-button">ログイン</a>
-                <div id="user-profile" style="display: none;">
+                <div id="user-profile">
                     <div id="user-icon">
                         <span>U</span>
                     </div>
                     <div id="profile-dropdown">
                         <a href="profile.html" class="dropdown-item" id="profile-button">プロフィール</a>
-                        <div class="dropdown-item" id="logout-dropdown-button">ログアウト</div>
+                        <a id="logout-dropdown-button" href="#" class="dropdown-item">ログアウト</a>
                     </div>
                 </div>
             </div>
@@ -105,8 +103,6 @@
             
             // Check if user is logged in and update UI accordingly
             if (isAuthenticated()) {
-                document.getElementById('register-button').style.display = 'none';
-                document.getElementById('login-button').style.display = 'none';
                 setupUserIcon();
                 
                 // Update nav links for logged-in users
